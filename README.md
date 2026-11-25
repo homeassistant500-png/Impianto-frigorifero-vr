@@ -159,7 +159,6 @@ Fa parte della lezione sugli impianti frigoriferi insieme a:
 - simulatore 3D per la LIM (pubblicato qui);
 - simulatore per visore (questa pagina).
 
-Sullo stesso modello: [Honda GX160 · motore a 4 tempi per visore VR](https://homeassistant500-png.github.io/Gx160-vr/).
 
 ## Riconoscimenti
 
