@@ -24,6 +24,7 @@ Simulatore didattico in realtà virtuale di un **impianto frigorifero a R134a** 
 - Aprire l'impianto con lo **spaccato**: vetro, sezione, solido (nel compressore si vedono motore, manovella, biella e pistone).
 - **Isolare** il lato di alta pressione, il lato di bassa pressione, il compressore, gli scambiatori o la valvola.
 - Vedere l'**aria** che attraversa condensatore ed evaporatore e il **calore** scambiato (q꜀ ceduto all'aria, q₀ tolto alla cella).
+- Osservare il **pressostato combinato di massima e minima B2**, montato accanto al compressore: un capillare va alla linea di mandata (P>, alta pressione) e uno alla linea di aspirazione (P<, bassa pressione). Le due spie sul frontale sono verdi a contatto chiuso e lampeggiano rosse quando il pressostato interviene; il **pulsante di riarmo** di P> lampeggia e si preme con il grilletto (su PC con un clic).
 - Lavorare sulla **cella frigorifera**: aprire la porta con il grilletto sulla maniglia (lampada H1, ventola M3 ferma, allarme H2 dopo 10 s), avviare lo **sbrinamento**, leggere il termostato S1 e i manometri di bassa e alta pressione.
 - Cambiare le **regolazioni** con i pulsanti − e +: temperatura di evaporazione e di condensazione, surriscaldamento, sottoraffreddamento, setpoint del termostato, velocità dell'animazione. Diagramma p–h, punti del ciclo, COP e potenze si aggiornano subito.
 - Mostrare le **etichette** sui componenti (principali o tutte) e i **termini in inglese**.
@@ -34,7 +35,7 @@ Simulatore didattico in realtà virtuale di un **impianto frigorifero a R134a** 
 
 | Comando | Azione |
 |---|---|
-| **Grilletto** | Preme i pulsanti dei pannelli; sulla striscia del ciclo sposta la particella seguita; sulla maniglia apre e chiude la porta della cella |
+| **Grilletto** | Preme i pulsanti dei pannelli; sulla striscia del ciclo sposta la particella seguita; sulla maniglia apre e chiude la porta della cella; sul pulsante del pressostato B2 riarma P> |
 | **Impugnatura** (tasto laterale) | Afferra l'impianto per spostarlo e girarlo |
 | **Levetta destra** ← → | Ruota l'impianto |
 | **Levetta destra** ↑ ↓ | Ingrandisce o rimpicciolisce l'impianto |
@@ -53,7 +54,7 @@ Il pulsante **RIMETTI SUL TAVOLO** del pannello riporta l'impianto sul banco, ne
 2. Digita l'indirizzo del simulatore (conviene salvarlo nei preferiti).
 3. Premi il pulsante rosso **ENTRA NEL VISORE** e consenti l'accesso alla realtà virtuale.
 
-Ti trovi in piedi davanti al banco: a sinistra il **pannello dei comandi**, a destra il **pannello dei dati**, sulla parete il poster con i colori del refrigerante. Lo schema elettrico e la dispensa si aprono in un pannello più grande alla destra del banco.
+Ti trovi in piedi davanti al banco: a sinistra il **pannello dei comandi**, a destra il **pannello dei dati**, sulla parete il poster con i colori del refrigerante. Lo schema elettrico e la dispensa si aprono in un pannello più grande, davanti a destra sopra la cella, sempre in primo piano; si chiude con **✕ CHIUDI**.
 
 La pagina funziona solo da un indirizzo **https** (come quello di GitHub Pages): aperta come file dal disco o da un indirizzo http, il visore non entra in realtà virtuale.
 
@@ -85,6 +86,7 @@ https://homeassistant500-png.github.io/Impianto-frigorifero-vr/Impianto-frigorif
 - Viste preimpostate: insieme, compressore, condensatore, valvola, evaporatore, cella.
 - Spaccato, isolamento, flusso, aria e calore, etichette e termini in inglese.
 - Pannelli in tempo reale: trasformazione, punti del ciclo, bilancio e prestazioni, diagramma p–h.
+- Pressostato di massima e minima B2 con spie e pulsante di riarmo cliccabile.
 - Schema elettrico funzionale e dispensa interattiva incorporata.
 - **Tour automatico:** se nessuno tocca la pagina il simulatore si presenta da solo.
 - **Tasti:** spazio pausa · 1–6 viste · D porta · H nasconde i pannelli.
@@ -103,7 +105,7 @@ Il file funziona anche **senza Internet**: basta scaricare `Impianto-frigorifero
 | Rendimento isoentropico | 0,75 |
 | Rendimento volumetrico | 1 − 0,05 (β − 1), limitato fra 0,3 e 1 |
 | Termostato S1 | setpoint 2 °C, differenziale 2 K |
-| Pressostato di massima P> | 18 bar relativi, riarmo manuale (si riarma sotto 14 bar) |
+| Pressostato di massima P> | 18 bar relativi, riarmo manuale con il pulsante sul pressostato o dallo schema (si riarma sotto 14 bar) |
 | Pressostato di minima P< | apre a 0,5 bar, richiude a 1,5 bar relativi |
 | Allarme porta aperta | ritardo 10 s (temporizzatore KT1) |
 | Termostato fine sbrinamento B3 | apre a +10 °C, richiude a +3 °C |

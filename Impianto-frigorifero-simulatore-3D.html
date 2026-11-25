@@ -689,7 +689,43 @@ hose('glp','#2c4fa8',[V(-1.0,0.51,0.20),V(-1.0,0.40,0.20),V(-0.98,0.33,0.0),V(-0
 hose('ghp','#b8321b',[V(-0.84,0.57,0.24),V(-0.78,0.50,0.24),V(-0.72,0.53,0.16),V(-0.69,0.535,0.115)]);
 add(cyl(0.006,0.006,0.022,10),mat('glp','brass','solid'),V(-0.82,0.266,-0.20));add(cyl(0.006,0.006,0.02,10),mat('ghp','brass','solid'),V(-0.69,0.52,0.11));
 
-const GZ=root.children.slice(GZ0);   // manometri, collettore e flessibili: visibili nelle viste d'insieme e del compressore
+const GZ=root.children.slice(GZ0);
+/* ---- pressostato combinato di massima e minima B2: P> sulla mandata (riarmo manuale), P< sull'aspirazione (riarmo automatico) ---- */
+const B2P=V(-0.60,0.205,0.245);
+const mB2=mat('b2','paint','solid'),mB2d=mat('b2','dark','solid'),mB2c=mat('b2','copper','solid'),mB2b=mat('b2','brass','solid');
+add(box(0.010,0.125,0.028),mB2d,V(B2P.x,0.1,B2P.z-0.03));                         // staffa sul basamento
+add(box(0.055,0.006,0.05),mB2d,V(B2P.x,0.043,B2P.z-0.03));
+add(box(0.075,0.092,0.048),mB2,B2P);                                               // corpo
+add(box(0.079,0.012,0.052),mB2d,V(B2P.x,B2P.y-0.046,B2P.z));
+add(box(0.079,0.006,0.052),mB2d,V(B2P.x,B2P.y+0.046,B2P.z));
+[-0.02,0.02].forEach((dx,i)=>{add(cyl(0.007,0.007,0.012,16),mat('b2',i?'hot':'cold','solid'),V(B2P.x+dx,B2P.y+0.055,B2P.z-0.008));   // viti di taratura P< (blu) e P> (rossa)
+  add(cyl(0.0035,0.0035,0.016,8),mB2b,V(B2P.x+dx,B2P.y-0.058,B2P.z-0.01));});                                                         // attacchi dei capillari
+const b2Cv=document.createElement('canvas');b2Cv.width=300;b2Cv.height=368;{const g=b2Cv.getContext('2d');
+  g.fillStyle='#e9ebec';g.fillRect(0,0,300,368);g.fillStyle='#16191d';g.fillRect(0,0,300,58);
+  g.fillStyle='#fff';g.font='700 34px "JetBrains Mono",monospace';g.textAlign='center';g.fillText('B2',150,42);
+  g.fillStyle='#16191d';g.font='600 21px "JetBrains Mono",monospace';g.fillText('PRESSOSTATO',150,92);
+  [[75,'#2456c8','P<','MIN','0,5 / 1,5'],[225,'#d2391f','P>','MAX','18 bar']].forEach(([x,c,a,b,t])=>{g.fillStyle=c;g.fillRect(x-62,112,124,8);
+    g.font='700 42px "JetBrains Mono",monospace';g.fillText(a,x,250);g.font='600 20px "JetBrains Mono",monospace';g.fillText(b,x,278);g.fillStyle='#566878';g.font='500 18px "JetBrains Mono",monospace';g.fillText(t,x,306);
+    g.strokeStyle='#16191d';g.lineWidth=3;g.beginPath();g.arc(x,165,26,0,7);g.stroke();});
+  g.fillStyle='#566878';g.font='500 16px "JetBrains Mono",monospace';g.fillText('bar rel. · R134a',150,350);}
+const b2Tex=new THREE.CanvasTexture(b2Cv);b2Tex.colorSpace=THREE.SRGBColorSpace;b2Tex.anisotropy=4;
+add(new THREE.PlaneGeometry(0.073,0.0895),new THREE.MeshBasicMaterial({map:b2Tex,toneMapped:false}),V(B2P.x,B2P.y,B2P.z+0.0245)).castShadow=false;
+const mLedL=mat('b2','dark','solid',null,{emissive:new THREE.Color('#20d060'),emissiveIntensity:1.2}),mLedH=mat('b2','dark','solid',null,{emissive:new THREE.Color('#20d060'),emissiveIntensity:1.2});
+add(new THREE.SphereGeometry(0.0052,14,10),mLedL,V(B2P.x-0.01825,B2P.y+0.0046,B2P.z+0.026));        // spia contatto P<
+add(new THREE.SphereGeometry(0.0052,14,10),mLedH,V(B2P.x+0.01825,B2P.y+0.0046,B2P.z+0.026));        // spia contatto P>
+const mRst=mat('b2','hot','solid',null,{emissive:new THREE.Color('#ff2a1a'),emissiveIntensity:0});
+add(cyl(0.0085,0.0085,0.007,20),mRst,V(B2P.x+0.006,B2P.y+0.0505,B2P.z+0.012));                                  // pulsante di riarmo P>
+var resetHit=new THREE.Mesh(box(0.03,0.03,0.04),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));resetHit.position.set(B2P.x+0.006,B2P.y+0.055,B2P.z+0.012);root.add(resetHit);
+// capillari: P> alla linea di mandata, P< alla linea di aspirazione
+add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(B2P.x+0.02,B2P.y-0.066,B2P.z-0.01),V(B2P.x+0.03,B2P.y-0.085,B2P.z+0.0),V(B2P.x+0.045,B2P.y-0.05,B2P.z-0.02),V(-0.585,0.33,0.24),V(-0.615,0.45,0.20),V(-0.64,0.50,0.14),V(-0.645,0.513,0.112)]),90,0.0016,6),mB2c);
+add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(B2P.x-0.02,B2P.y-0.066,B2P.z-0.01),V(B2P.x-0.03,B2P.y-0.085,B2P.z+0.0),V(B2P.x-0.05,B2P.y-0.03,B2P.z-0.02),V(-0.645,0.30,0.20),V(-0.665,0.33,0.10),V(-0.685,0.33,-0.08),V(-0.76,0.30,-0.13),V(-0.81,0.272,-0.12),V(-0.82,0.258,-0.12)]),110,0.0016,6),mB2c);
+add(cyl(0.004,0.004,0.012,10),mB2b,V(-0.645,0.519,0.11));add(cyl(0.004,0.004,0.012,10),mB2b,V(-0.82,0.262,-0.12));
+function b2Update(now){const bl=now%700<350,on=cell.s0;
+  const led=(m,open)=>{m.emissive.set(open?'#ff2a1a':'#20d060');m.emissiveIntensity=!on?0:open?(bl?2.2:0.4):1.2;};
+  led(mLedL,cell.lpOpen);led(mLedH,cell.hpTrip);mRst.emissiveIntensity=cell.hpTrip&&on?(bl?1.6:0.5):0;}
+function doRearm(){if(cell.ph-ATM<14){cell.hpTrip=false;cell.simHp=false;}}
+
+   // manometri, collettore e flessibili: visibili nelle viste d'insieme e del compressore
 /* ---------- tubazioni: guscio di rame + fluido colorato ---------- */
 const RS=10,NR=PS.length;
 function tubeGeo(scale){const pos=new Float32Array(NR*RS*3),nor=new Float32Array(NR*RS*3),col=new Float32Array(NR*RS*3).fill(1),idx=[];
@@ -717,7 +753,7 @@ const air=new THREE.InstancedMesh(new THREE.SphereGeometry(1,8,6),new THREE.Mesh
 /* ---------- stato dell'interfaccia ---------- */
 const UI={view:'insieme',cut:'vetro',iso:'tutto',lab:true,flow:true,air:true,en:true,run:true,speed:1,hidden:false};
 let C=cycle(-10,40,5,5);
-const ISO={tutto:null,ap:['comp','cond','liq','valv','ghp','dis'],bp:['comp','evap','valv','glp','suc','evin'],comp:['comp'],scamb:['cond','evap'],valv:['valv']};
+const ISO={tutto:null,ap:['comp','cond','liq','valv','ghp','dis','b2'],bp:['comp','evap','valv','glp','suc','evin','b2'],comp:['comp'],scamb:['cond','evap'],valv:['valv']};
 const ZGRP={comp:'comp',dis:'dis',cond:'cond',liq:'liq',tev:'valv',evin:'evin',evap:'evap',suc:'suc'};
 const inIso=g=>!ISO[UI.iso]||ISO[UI.iso].includes(g)||(g==='base'&&false);
 function applyLook(){
@@ -739,7 +775,7 @@ function recolor(){const cc=core.geometry.attributes.color.array,pc=pipe.geometr
   core.geometry.attributes.color.needsUpdate=true;pipe.geometry.attributes.color.needsUpdate=true;}
 
 /* ---------- camera: orbita e viste ---------- */
-const VIEWS={cella:{t:V(0.62,0.42,0.04),az:-0.38,po:1.2,d:1.95},insieme:{t:V(-0.03,0.32,0.0),az:-0.30,po:1.14,d:3.05},comp:{t:V(-0.81,0.17,0.05),az:-0.12,po:1.3,d:0.70},cond:{t:V(-0.30,0.26,-0.03),az:0.58,po:1.22,d:1.32},valv:{t:V(0.29,0.63,-0.25),az:-0.2,po:1.3,d:0.72},evap:{t:V(0.60,0.59,-0.24),az:0.16,po:1.33,d:1.05}};
+const VIEWS={cella:{t:V(0.62,0.42,0.04),az:-0.38,po:1.2,d:1.95},insieme:{t:V(-0.03,0.32,0.0),az:-0.30,po:1.14,d:3.05},comp:{t:V(-0.73,0.19,0.11),az:-0.05,po:1.28,d:0.86},cond:{t:V(-0.30,0.26,-0.03),az:0.58,po:1.22,d:1.32},valv:{t:V(0.29,0.63,-0.25),az:-0.2,po:1.3,d:0.72},evap:{t:V(0.60,0.59,-0.24),az:0.16,po:1.33,d:1.05}};
 const cam={t:VIEWS.insieme.t.clone(),az:VIEWS.insieme.az,po:VIEWS.insieme.po,d:VIEWS.insieme.d},tw={on:false};
 function goView(v){UI.view=v;const g=VIEWS[v];tw.on=true;tw.t0=performance.now();tw.dur=1300;tw.a={t:cam.t.clone(),az:cam.az,po:cam.po,d:cam.d};
   let az=g.az;while(az-tw.a.az>Math.PI)az-=2*Math.PI;while(az-tw.a.az<-Math.PI)az+=2*Math.PI;tw.b={t:g.t.clone(),az,po:g.po,d:g.d};}
@@ -814,6 +850,7 @@ const LBL=[
  ['Manometro alta pressione','High-pressure gauge',V(-0.84,0.73,0.24),0.03,['comp']],
  ['Collettore manometrico','Gauge manifold',V(-0.92,0.535,0.215),0.03,['comp']],
  ['Basamento unità condensatrice','Condensing unit base',V(-0.30,0.04,0.28),0.03,['cond']],
+ ['Pressostato di massima e minima B2','Dual pressure switch B2',V(-0.60,0.262,0.25),0.03,['insieme','comp','cond']],
 ];
 const lab=$('lab');const LEL=LBL.map(()=>{const d=document.createElement('div');d.className='l';lab.appendChild(d);return d;});
 const PNT=[[1,V(-0.82,0.25,-0.075)],[2,V(-0.76,0.345,0.11)],[3,V(0.28,0.70,-0.25)],[4,V(0.40,0.70,-0.25)]].map(([n,p])=>{const d=document.createElement('div');d.className='l p';d.textContent=n;lab.appendChild(d);return{d,p};});
@@ -872,6 +909,7 @@ function onHandle(e){const r=canvas.getBoundingClientRect();_m.set((e.clientX-r.
 let hov=false;
 canvas.addEventListener('pointermove',e=>{if(drag)return;const h=onHandle(e);if(h!==hov){hov=h;canvas.style.cursor=h?'pointer':'';mHandle.emissiveIntensity=h?0.6:0;}});
 canvas.addEventListener('pointerup',e=>{if(drag&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<5&&drag.b===0&&onHandle(e))doDoor();});
+canvas.addEventListener('pointerup',e=>{if(!drag||Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>=5||drag.b!==0)return;const r=canvas.getBoundingClientRect();_m.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(_m,camera);if(ray.intersectObject(resetHit,false).length){doRearm();renderCellUI(true);}});
 canvas.addEventListener('pointerdown',e=>{user();drag={x:e.clientX,y:e.clientY,b:e.button,az:cam.az,po:cam.po,t:cam.t.clone()};canvas.setPointerCapture(e.pointerId);tw.on=false;});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=(e.clientX-drag.x)/H,dy=(e.clientY-drag.y)/H;
   if(drag.b===2||e.shiftKey){const r=V(Math.cos(cam.az),0,-Math.sin(cam.az)),u=V(0,1,0);cam.t.copy(drag.t).addScaledVector(r,-dx*cam.d*1.1).addScaledVector(u,dy*cam.d*1.1);}
@@ -968,7 +1006,7 @@ function cellMsg(s){let msg,cls='';
 function cellShort(s){let t,cls='';
   if(!s.s0){t='Q1 aperto · impianto senza tensione';cls='off';}
   else if(s.defrost){t='Sbrinamento T1 · resistenza E2 '+(s.heat?'inserita':'esclusa, sgocciolamento')+' · compressore e M3 fermi · ancora '+Math.ceil(DEF_T-s.dfT)+' s';cls='warn';}
-  else if(s.hpTrip){t='Pressostato di massima P> aperto · compressore fermo · riarmo nello schema elettrico';cls='crit';}
+  else if(s.hpTrip){t='Pressostato di massima P> aperto · compressore fermo · riarmo: pulsante sul pressostato o schema elettrico';cls='crit';}
   else if(s.lpOpen){t='Pressostato di minima P< aperto · compressore fermo';cls='crit';}
   else if(!s.th){t='Termostato S1 aperto · cella '+f(s.T)+' °C in temperatura · compressore fermo, riparte a '+f(s.sp+DIFF,0)+' °C';}
   else t='Termostato S1 chiuso · compressore M1 in marcia · cella '+f(s.T)+' °C → setpoint '+f(s.sp,0)+' °C';
@@ -998,7 +1036,7 @@ $('bDef').addEventListener('click',()=>{user();doDefrost();});$('xDef').addEvent
 $('bSch').addEventListener('click',()=>{user();doSch(true);});$('schX').addEventListener('click',()=>{user();doSch(false);});
 $('xS0').addEventListener('click',()=>{user();cell.s0=!cell.s0;renderCellUI(true);});
 $('xFHp').addEventListener('click',()=>{user();cell.hpTrip=true;cell.simHp=true;renderCellUI(true);});
-$('xRearm').addEventListener('click',()=>{user();if(cell.ph-ATM<14){cell.hpTrip=false;cell.simHp=false;}renderCellUI(true);});
+$('xRearm').addEventListener('click',()=>{user();doRearm();renderCellUI(true);});
 $('xFLp').addEventListener('click',()=>{user();cell.fLp=!cell.fLp;renderCellUI(true);});
 $('xCont').addEventListener('click',()=>{user();cell.fanMode='cont';renderCellUI(true);});$('xPar').addEventListener('click',()=>{user();cell.fanMode='par';renderCellUI(true);});
 $('sSP').addEventListener('input',e=>{user();cell.sp=+e.target.value;$('oSP').textContent=f(cell.sp,0)+' °C';});
@@ -1096,7 +1134,7 @@ function frame(now){const dt=Math.min(0.05,(now-last)/1000);last=now;
   root.userData.mE1.emissiveIntensity=cell.s0&&!cell.km?0.8:0;mE2.emissiveIntensity=cell.heat?1.8:0;
   frostM.opacity=0.82*Math.pow(cell.frost,0.8)*(ON&&!ON.includes('evap')?0.08:1);frostB.visible=cell.frost>0.01;
   thT+=dt;if(thT>0.25){thT=0;drawThermo();renderCellUI(false);}
-  sgWin.material.emissiveIntensity=C.SC>0?0.35:0.1;
+  sgWin.material.emissiveIntensity=C.SC>0?0.35:0.1;b2Update(now);
   const gv=UI.view==='insieme'||UI.view==='comp';const fh=UI.view==='evap'||UI.view==='valv';FRONT.forEach(o=>o.visible=!fh);GZ.forEach(o=>o.visible=gv);
   camUpdate(now);renderer.render(scene,camera);
   // pannelli

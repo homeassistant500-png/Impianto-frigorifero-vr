@@ -410,7 +410,43 @@ hose('glp','#2c4fa8',[V(-1.0,0.51,0.20),V(-1.0,0.40,0.20),V(-0.98,0.33,0.0),V(-0
 hose('ghp','#b8321b',[V(-0.84,0.57,0.24),V(-0.78,0.50,0.24),V(-0.72,0.53,0.16),V(-0.69,0.535,0.115)]);
 add(cyl(0.006,0.006,0.022,10),mat('glp','brass','solid'),V(-0.82,0.266,-0.20));add(cyl(0.006,0.006,0.02,10),mat('ghp','brass','solid'),V(-0.69,0.52,0.11));
 
-const GZ=root.children.slice(GZ0);   // manometri, collettore e flessibili: visibili nelle viste d'insieme e del compressore
+const GZ=root.children.slice(GZ0);
+/* ---- pressostato combinato di massima e minima B2: P> sulla mandata (riarmo manuale), P< sull'aspirazione (riarmo automatico) ---- */
+const B2P=V(-0.60,0.205,0.245);
+const mB2=mat('b2','paint','solid'),mB2d=mat('b2','dark','solid'),mB2c=mat('b2','copper','solid'),mB2b=mat('b2','brass','solid');
+add(box(0.010,0.125,0.028),mB2d,V(B2P.x,0.1,B2P.z-0.03));                         // staffa sul basamento
+add(box(0.055,0.006,0.05),mB2d,V(B2P.x,0.043,B2P.z-0.03));
+add(box(0.075,0.092,0.048),mB2,B2P);                                               // corpo
+add(box(0.079,0.012,0.052),mB2d,V(B2P.x,B2P.y-0.046,B2P.z));
+add(box(0.079,0.006,0.052),mB2d,V(B2P.x,B2P.y+0.046,B2P.z));
+[-0.02,0.02].forEach((dx,i)=>{add(cyl(0.007,0.007,0.012,16),mat('b2',i?'hot':'cold','solid'),V(B2P.x+dx,B2P.y+0.055,B2P.z-0.008));   // viti di taratura P< (blu) e P> (rossa)
+  add(cyl(0.0035,0.0035,0.016,8),mB2b,V(B2P.x+dx,B2P.y-0.058,B2P.z-0.01));});                                                         // attacchi dei capillari
+const b2Cv=document.createElement('canvas');b2Cv.width=300;b2Cv.height=368;{const g=b2Cv.getContext('2d');
+  g.fillStyle='#e9ebec';g.fillRect(0,0,300,368);g.fillStyle='#16191d';g.fillRect(0,0,300,58);
+  g.fillStyle='#fff';g.font='700 34px "JetBrains Mono",monospace';g.textAlign='center';g.fillText('B2',150,42);
+  g.fillStyle='#16191d';g.font='600 21px "JetBrains Mono",monospace';g.fillText('PRESSOSTATO',150,92);
+  [[75,'#2456c8','P<','MIN','0,5 / 1,5'],[225,'#d2391f','P>','MAX','18 bar']].forEach(([x,c,a,b,t])=>{g.fillStyle=c;g.fillRect(x-62,112,124,8);
+    g.font='700 42px "JetBrains Mono",monospace';g.fillText(a,x,250);g.font='600 20px "JetBrains Mono",monospace';g.fillText(b,x,278);g.fillStyle='#566878';g.font='500 18px "JetBrains Mono",monospace';g.fillText(t,x,306);
+    g.strokeStyle='#16191d';g.lineWidth=3;g.beginPath();g.arc(x,165,26,0,7);g.stroke();});
+  g.fillStyle='#566878';g.font='500 16px "JetBrains Mono",monospace';g.fillText('bar rel. · R134a',150,350);}
+const b2Tex=new THREE.CanvasTexture(b2Cv);b2Tex.colorSpace=THREE.SRGBColorSpace;b2Tex.anisotropy=4;
+add(new THREE.PlaneGeometry(0.073,0.0895),new THREE.MeshBasicMaterial({map:b2Tex,toneMapped:false}),V(B2P.x,B2P.y,B2P.z+0.0245)).castShadow=false;
+const mLedL=mat('b2','dark','solid',null,{emissive:new THREE.Color('#20d060'),emissiveIntensity:1.2}),mLedH=mat('b2','dark','solid',null,{emissive:new THREE.Color('#20d060'),emissiveIntensity:1.2});
+add(new THREE.SphereGeometry(0.0052,14,10),mLedL,V(B2P.x-0.01825,B2P.y+0.0046,B2P.z+0.026));        // spia contatto P<
+add(new THREE.SphereGeometry(0.0052,14,10),mLedH,V(B2P.x+0.01825,B2P.y+0.0046,B2P.z+0.026));        // spia contatto P>
+const mRst=mat('b2','hot','solid',null,{emissive:new THREE.Color('#ff2a1a'),emissiveIntensity:0});
+add(cyl(0.0085,0.0085,0.007,20),mRst,V(B2P.x+0.006,B2P.y+0.0505,B2P.z+0.012));                                  // pulsante di riarmo P>
+var resetHit=new THREE.Mesh(box(0.03,0.03,0.04),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));resetHit.position.set(B2P.x+0.006,B2P.y+0.055,B2P.z+0.012);root.add(resetHit);
+// capillari: P> alla linea di mandata, P< alla linea di aspirazione
+add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(B2P.x+0.02,B2P.y-0.066,B2P.z-0.01),V(B2P.x+0.03,B2P.y-0.085,B2P.z+0.0),V(B2P.x+0.045,B2P.y-0.05,B2P.z-0.02),V(-0.585,0.33,0.24),V(-0.615,0.45,0.20),V(-0.64,0.50,0.14),V(-0.645,0.513,0.112)]),90,0.0016,6),mB2c);
+add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([V(B2P.x-0.02,B2P.y-0.066,B2P.z-0.01),V(B2P.x-0.03,B2P.y-0.085,B2P.z+0.0),V(B2P.x-0.05,B2P.y-0.03,B2P.z-0.02),V(-0.645,0.30,0.20),V(-0.665,0.33,0.10),V(-0.685,0.33,-0.08),V(-0.76,0.30,-0.13),V(-0.81,0.272,-0.12),V(-0.82,0.258,-0.12)]),110,0.0016,6),mB2c);
+add(cyl(0.004,0.004,0.012,10),mB2b,V(-0.645,0.519,0.11));add(cyl(0.004,0.004,0.012,10),mB2b,V(-0.82,0.262,-0.12));
+function b2Update(now){const bl=now%700<350,on=cell.s0;
+  const led=(m,open)=>{m.emissive.set(open?'#ff2a1a':'#20d060');m.emissiveIntensity=!on?0:open?(bl?2.2:0.4):1.2;};
+  led(mLedL,cell.lpOpen);led(mLedH,cell.hpTrip);mRst.emissiveIntensity=cell.hpTrip&&on?(bl?1.6:0.5):0;}
+function doRearm(){if(cell.ph-ATM<14){cell.hpTrip=false;cell.simHp=false;}}
+
+   // manometri, collettore e flessibili: visibili nelle viste d'insieme e del compressore
 /* ---------- tubazioni: guscio di rame + fluido colorato ---------- */
 const RING=[];for(let i=0;i<PS.length;i+=2)RING.push(i);if(RING[RING.length-1]!==PS.length-1)RING.push(PS.length-1);const RS=8,NR=RING.length;
 function tubeGeo(scale){const pos=new Float32Array(NR*RS*3),nor=new Float32Array(NR*RS*3),col=new Float32Array(NR*RS*3).fill(1),idx=[];
@@ -438,7 +474,7 @@ const air=new THREE.InstancedMesh(new THREE.SphereGeometry(1,6,4),new THREE.Mesh
 /* ---------- stato dell'interfaccia ---------- */
 const UI={view:'insieme',cut:'vetro',iso:'tutto',lab:true,flow:true,air:true,en:true,run:true,speed:1,hidden:false};
 let C=cycle(-10,40,5,5);
-const ISO={tutto:null,ap:['comp','cond','liq','valv','ghp','dis'],bp:['comp','evap','valv','glp','suc','evin'],comp:['comp'],scamb:['cond','evap'],valv:['valv']};
+const ISO={tutto:null,ap:['comp','cond','liq','valv','ghp','dis','b2'],bp:['comp','evap','valv','glp','suc','evin','b2'],comp:['comp'],scamb:['cond','evap'],valv:['valv']};
 const ZGRP={comp:'comp',dis:'dis',cond:'cond',liq:'liq',tev:'valv',evin:'evin',evap:'evap',suc:'suc'};
 const inIso=g=>!ISO[UI.iso]||ISO[UI.iso].includes(g)||(g==='base'&&false);
 function applyLook(){
@@ -545,7 +581,7 @@ function cellMsg(s){let msg,cls='';
 function cellShort(s){let t,cls='';
   if(!s.s0){t='Q1 aperto · impianto senza tensione';cls='off';}
   else if(s.defrost){t='Sbrinamento T1 · resistenza E2 '+(s.heat?'inserita':'esclusa, sgocciolamento')+' · compressore e M3 fermi · ancora '+Math.ceil(DEF_T-s.dfT)+' s';cls='warn';}
-  else if(s.hpTrip){t='Pressostato di massima P> aperto · compressore fermo · riarmo nello schema elettrico';cls='crit';}
+  else if(s.hpTrip){t='Pressostato di massima P> aperto · compressore fermo · riarmo: pulsante sul pressostato o schema elettrico';cls='crit';}
   else if(s.lpOpen){t='Pressostato di minima P< aperto · compressore fermo';cls='crit';}
   else if(!s.th){t='Termostato S1 aperto · cella '+f(s.T)+' °C in temperatura · compressore fermo, riparte a '+f(s.sp+DIFF,0)+' °C';}
   else t='Termostato S1 chiuso · compressore M1 in marcia · cella '+f(s.T)+' °C → setpoint '+f(s.sp,0)+' °C';
@@ -745,7 +781,7 @@ function drawSch(p,g){const s=cell;updSchema();
   LEGEND.forEach((l,i)=>{const x=24+(i>=8?568:0),yy=y+(i%8)*31+26;T(g,l[0],x,yy,`700 18px ${FS}`,CI.ink);g.font=`400 18px ${FS}`;let t=l[1];while(g.measureText(t).width>430&&t.length>4)t=t.slice(0,-2)+'…';T(g,t,x+116,yy,`400 18px ${FS}`,CI.dim);});
   const X=1180,Wc=p.w-X-24;let yy=112;cap(g,'Comandi',X,yy);yy+=12;
   const bt=[['xS0','Q1 · Interruttore principale',()=>{cell.s0=!cell.s0;dirtyAll();},{on:s.s0}],['xDoor',s.door?'Chiudi la porta':'Apri la porta',()=>doDoor(),{kind:s.door?'crit':undefined}],['xDef',s.defrost?'Sbrinamento… '+Math.ceil(DEF_T-s.dfT)+' s':'Avvia sbrinamento T1',doDefrost,{on:s.defrost}],
-    ['xFHp','Simula intervento P>',()=>{cell.hpTrip=true;cell.simHp=true;dirtyAll();},{kind:s.hpTrip&&s.simHp?'crit':undefined}],['xRearm','Riarmo P>',()=>{if(cell.ph-ATM<14){cell.hpTrip=false;cell.simHp=false;}dirtyAll();}],
+    ['xFHp','Simula intervento P>',()=>{cell.hpTrip=true;cell.simHp=true;dirtyAll();},{kind:s.hpTrip&&s.simHp?'crit':undefined}],['xRearm','Riarmo P>',()=>{doRearm();dirtyAll();}],
     ['xFLp',s.fLp?'Rilascia P<':'Apri P<',()=>{cell.fLp=!cell.fLp;dirtyAll();},{kind:s.fLp?'crit':undefined}]];
   bt.forEach((b,i)=>{B(p,b[0],X,yy+i*54,Wc,46,b[1],b[2],{fs:17,...(b[3]||{})});});yy+=6*54+12;
   cap(g,'Ventola evaporatore M3',X,yy);yy+=12;B(p,'xCont',X,yy,Wc/2-5,46,'Continua',()=>{cell.fanMode='cont';dirtyAll();},{on:s.fanMode==='cont',fs:16});B(p,'xPar',X+Wc/2+5,yy,Wc/2-5,46,'Con compr.',()=>{cell.fanMode='par';dirtyAll();},{on:s.fanMode==='par',fs:16});yy+=62;
@@ -832,9 +868,10 @@ function drawDoc(p,g){g.fillStyle=CI.ink;g.fillRect(0,0,p.w,84);if(LOGO){g.fillS
   if(UI.doc==='sch')drawSch(p,g);else if(UI.doc==='disp')drawDisp(p,g);else if(UI.doc==='quiz')drawQuiz(p,g);}
 function openFull(){const go=()=>{location.href='dispensa-impianti-frigoriferi.html';};const s=XRM.getSession();if(s){s.end().then(go,go);}else window.open('dispensa-impianti-frigoriferi.html','_blank');}
 
-const cmdP=makePanel(1024,1420,0.74,V(-1.62,1.24,-0.74),0.72,drawCmd);
-const datP=makePanel(1024,1900,0.68,V(1.62,1.38,-0.74),-0.72,drawDat,true,0.8);
-const docP=makePanel(1600,1000,1.70,V(2.15,1.55,-2.10),-0.95,drawDoc,false);docP.mesh.visible=docP.frame.visible=false;
+const cmdP=makePanel(1024,1420,0.82,V(-1.80,1.26,-0.45),1.0,drawCmd);
+const datP=makePanel(1024,1900,0.76,V(1.80,1.44,-0.45),-1.0,drawDat,true,0.8);
+const docP=makePanel(1600,1000,1.85,V(0.95,1.72,-1.45),-0.58,drawDoc,false);docP.mesh.visible=docP.frame.visible=false;
+[[docP.mesh,31],[docP.frame,30]].forEach(([o,r])=>{o.material.depthTest=false;o.material.transparent=true;o.renderOrder=r;});   // finestra sempre in primo piano
 /* targa con logo sul fronte del banco e poster sulla parete */
 function canvasPlane(w,h,mw,draw){const cv=document.createElement('canvas');cv.width=w;cv.height=h;const g=cv.getContext('2d');draw(g,w,h);const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;
   const m=new THREE.Mesh(new THREE.PlaneGeometry(mw,mw*h/w),new THREE.MeshStandardMaterial({map:t,roughness:0.8}));m.receiveShadow=true;LAB.add(m);return m;}
@@ -859,7 +896,7 @@ const LBL=[
  ['Linea del liquido','Liquid line',V(0.08,0.40,-0.25),0],['Linea di mandata','Discharge line',V(-0.69,0.53,0.11),0],['Cella frigorifera','Cold room',V(0.60,0.87,0.0),1],['Termostato S1 · sonda','Thermostat S1 · probe',V(0.25,0.215,-0.33),1],
  ['Porta della cella','Cold room door',V(0.84,0.80,0.36),1],['Finecorsa porta S2','Door limit switch S2',V(0.60,0.65,0.33),1],['Lampada cella H1','Cold room lamp H1',V(0.60,0.86,0.02),1],['Allarme porta H2','Door alarm H2',V(0.95,0.90,0.28),1],
  ['Resistenza di sbrinamento E2','Defrost heater E2',V(0.47,0.52,-0.232),0],['Bacinella raccolta condensa','Condensate drain pan',V(0.78,0.44,-0.20),0],['Resistenza carter E1','Crankcase heater E1',V(-0.80,0.09,0.18),0],['Scatola morsettiera','Terminal box',V(-0.955,0.22,0.02),0],
- ['Manometro bassa pressione','Low-pressure gauge',V(-1.0,0.67,0.20),0],['Manometro alta pressione','High-pressure gauge',V(-0.84,0.73,0.24),0],['Collettore manometrico','Gauge manifold',V(-0.92,0.535,0.215),0],['Basamento unità condensatrice','Condensing unit base',V(-0.30,0.04,0.28),0]];
+ ['Manometro bassa pressione','Low-pressure gauge',V(-1.0,0.67,0.20),0],['Manometro alta pressione','High-pressure gauge',V(-0.84,0.73,0.24),0],['Collettore manometrico','Gauge manifold',V(-0.92,0.535,0.215),0],['Basamento unità condensatrice','Condensing unit base',V(-0.30,0.04,0.28),0],['Pressostato di massima e minima B2','Dual pressure switch B2',V(-0.60,0.262,0.25),1]];
 function labelCanvas(a,b,col=CI.ink){const cv=document.createElement('canvas'),g=cv.getContext('2d');const f1=`600 44px ${FM}`,f2=`500 32px ${FM}`;g.font=f1;let w=g.measureText(a).width;if(b){g.font=f2;w=Math.max(w,g.measureText(b).width);}
   cv.width=Math.ceil(w+44);cv.height=b?112:70;g.fillStyle='rgba(255,255,255,.9)';g.fillRect(0,0,cv.width,cv.height);g.fillStyle=col;g.fillRect(0,0,7,cv.height);T(g,a,24,b?50:50,f1,CI.ink);if(b)T(g,b,24,94,f2,CI.mute);return cv;}
 function spriteFrom(cv,center=[0,0]){const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:false,depthWrite:false,transparent:true,toneMapped:false}));
@@ -889,18 +926,18 @@ function ctrlModel(){const g=new THREE.Group(),m=lm('#2b3137',0.45,0.3),m2=lm('#
   const body=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.022,0.11,16),m);body.rotation.x=Math.PI/2-0.5;body.position.set(0,-0.02,0.04);g.add(body);
   const ring=new THREE.Mesh(new THREE.TorusGeometry(0.038,0.006,8,28),m2);ring.position.set(0,0.008,-0.01);ring.rotation.x=0.6;g.add(ring);return g;}
 const CTRL=[0,1].map(i=>{const c=XRM.getController(i),gr=XRM.getControllerGrip(i);scene.add(c,gr);gr.add(ctrlModel());
-  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,0,0),V(0,0,-1)]),new THREE.LineBasicMaterial({color:CI.lamp,transparent:true,opacity:0.9}));line.scale.z=3;c.add(line);
-  const dot=new THREE.Mesh(new THREE.SphereGeometry(0.008,12,8),new THREE.MeshBasicMaterial({color:CI.lamp,toneMapped:false}));dot.visible=false;scene.add(dot);
+  const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,0,0),V(0,0,-1)]),new THREE.LineBasicMaterial({color:CI.lamp,transparent:true,opacity:0.9,depthTest:false}));line.scale.z=3;line.renderOrder=40;c.add(line);
+  const dot=new THREE.Mesh(new THREE.SphereGeometry(0.008,12,8),new THREE.MeshBasicMaterial({color:CI.lamp,toneMapped:false,transparent:true,depthTest:false}));dot.renderOrder=41;dot.visible=false;scene.add(dot);
   const o={i,c,gr,line,dot,src:null,prev:[],hit:null,hand:''};
   c.addEventListener('connected',e=>{o.src=e.data;o.hand=e.data.handedness||'';});c.addEventListener('disconnected',()=>{o.src=null;if(stage.parent===c)scene.attach(stage);});
   c.addEventListener('selectstart',()=>{audioInit();if(o.hit)press(o.hit,o);});
   c.addEventListener('squeezestart',()=>{c.attach(stage);pulse(0.4,40,o);});c.addEventListener('squeezeend',()=>{if(stage.parent===c){scene.attach(stage);dirtyAll();}});
   return o;});
 function pulse(v=0.5,ms=30,o){const L=o?[o]:CTRL;L.forEach(c=>{try{c.src?.gamepad?.hapticActuators?.[0]?.pulse(v,ms);}catch(e){}});}
-function targets(){const t=[cmdP.mesh,datP.mesh,handleHit];if(docP.mesh.visible)t.push(docP.mesh);return t;}
-function resolve(hit){if(!hit)return null;if(hit.object===handleHit)return{kind:'door'};const p=hit.object.userData.panel;if(!p||!hit.uv)return{kind:'panel',p};
+function targets(){const t=[cmdP.mesh,datP.mesh,handleHit,resetHit];if(docP.mesh.visible)t.push(docP.mesh);return t;}
+function resolve(hit){if(!hit)return null;if(hit.object===handleHit)return{kind:'door'};if(hit.object===resetHit)return{kind:'b2'};const p=hit.object.userData.panel;if(!p||!hit.uv)return{kind:'panel',p};
   const x=hit.uv.x*p.w,y=(1-hit.uv.y)*p.h;const b=p.btns.find(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h);return{kind:'panel',p,b,u:b?(x-b.x)/b.w:0};}
-function press(h,o){if(h.kind==='door'){doDoor();pulse(0.5,40,o);return;}if(h.b){h.b.act(h.u);h.p.dirty=true;pulse(0.35,25,o);}}
+function press(h,o){if(h.kind==='door'){doDoor();pulse(0.5,40,o);return;}if(h.kind==='b2'){doRearm();dirtyAll();pulse(0.5,40,o);return;}if(h.b){h.b.act(h.u);h.p.dirty=true;pulse(0.35,25,o);}}
 function rayFrom(obj){_m4.identity().extractRotation(obj.matrixWorld);ray.ray.origin.setFromMatrixPosition(obj.matrixWorld);ray.ray.direction.set(0,0,-1).applyMatrix4(_m4);return ray.intersectObjects(targets(),false)[0]||null;}
 const btnOnce=(o,n)=>{const v=!!o.src?.gamepad?.buttons[n]?.pressed,was=o.prev[n];o.prev[n]=v;return v&&!was;};
 const dz=v=>Math.abs(v)<0.2?0:(v-Math.sign(v)*0.2)/0.8;
@@ -915,13 +952,13 @@ function xrInput(dt){const hov=new Map();let handHov=false;
   return{hov,handHov};}
 
 /* ---------- anteprima su schermo: orbita, clic sui pannelli ---------- */
-const orb={t:V(0,1.12,-1.15),az:0,el:0.30,d:2.6};let orbGoal=null,orbHome=null;
+const orb={t:V(0,1.12,-1.15),az:0,el:0.30,d:3.1};let orbGoal=null,orbHome=null;
 function focusDoc(on){if(XRM.isPresenting)return;if(on){if(!orbHome)orbHome={t:orb.t.clone(),az:orb.az,el:orb.el,d:orb.d};const yaw=docP.grp.rotation.y;orbGoal={t:docP.grp.position.clone(),az:yaw,el:0.06,d:Math.max(1.25,1.0/Math.tan(camera.fov*Math.PI/360)*0.6,0.95/(Math.tan(camera.fov*Math.PI/360)*camera.aspect))};}else if(orbHome){orbGoal=orbHome;orbHome=null;}}
 function orbitCam(){camera.position.set(orb.t.x+orb.d*Math.sin(orb.az)*Math.cos(orb.el),orb.t.y+orb.d*Math.sin(orb.el),orb.t.z+orb.d*Math.cos(orb.az)*Math.cos(orb.el));camera.lookAt(orb.t);}
 const mouse=new THREE.Vector2();let mHit=null,drag=null;
 function mouseHit(e){const r=canvas.getBoundingClientRect();mouse.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(mouse,camera);return resolve(ray.intersectObjects(targets(),false)[0]||null);}
-canvas.addEventListener('pointerdown',e=>{audioInit();if(XRM.isPresenting)return;const h=mouseHit(e);if(h&&(h.b||h.kind==='door')){press(h);return;}orbGoal=null;drag={x:e.clientX,y:e.clientY,az:orb.az,el:orb.el,b:e.button,t:orb.t.clone()};canvas.setPointerCapture(e.pointerId);});
-canvas.addEventListener('pointermove',e=>{if(XRM.isPresenting)return;if(!drag){mHit=mouseHit(e);canvas.style.cursor=mHit&&(mHit.b||mHit.kind==='door')?'pointer':'grab';return;}
+canvas.addEventListener('pointerdown',e=>{audioInit();if(XRM.isPresenting)return;const h=mouseHit(e);if(h&&(h.b||h.kind==='door'||h.kind==='b2')){press(h);return;}orbGoal=null;drag={x:e.clientX,y:e.clientY,az:orb.az,el:orb.el,b:e.button,t:orb.t.clone()};canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(XRM.isPresenting)return;if(!drag){mHit=mouseHit(e);canvas.style.cursor=mHit&&(mHit.b||mHit.kind==='door'||mHit.kind==='b2')?'pointer':'grab';return;}
   const dx=(e.clientX-drag.x)/innerHeight,dy=(e.clientY-drag.y)/innerHeight;
   if(drag.b===2||e.shiftKey){const r=V(Math.cos(orb.az),0,-Math.sin(orb.az));orb.t.copy(drag.t).addScaledVector(r,-dx*orb.d).add(V(0,dy*orb.d,0));}else{orb.az=drag.az-dx*3.2;orb.el=clamp(drag.el+dy*2.4,-0.2,1.35);}});
 canvas.addEventListener('pointerup',()=>{drag=null;});canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -975,7 +1012,7 @@ function frame(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const XR=XR
   if(cell.alarm&&cell.s0&&UI.run)buzzer();
   root.userData.mE1.emissiveIntensity=cell.s0&&!cell.km?0.8:0;mE2.emissiveIntensity=cell.heat?1.8:0;
   frostM.opacity=0.82*Math.pow(cell.frost,0.8)*(ON&&!ON.includes('evap')?0.08:1);frostB.visible=cell.frost>0.01;
-  sgWin.material.emissiveIntensity=C.SC>0?0.35:0.1;
+  sgWin.material.emissiveIntensity=C.SC>0?0.35:0.1;b2Update(now);
   // modello nel laboratorio: piani di sezione, luce della cella, alone della particella rivolto all'osservatore
   updatePlanes();root.getWorldScale(WS);lampL.distance=0.85*WS.x;
   const cam=XR?XRM.getCamera():camera;cam.getWorldQuaternion(_q);tracer.parent.getWorldQuaternion(_q2);halo.quaternion.copy(_q2.invert().multiply(_q));
@@ -994,7 +1031,7 @@ PANELS.forEach(p=>{if(p!==docP)render(p);});
 if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
 $('load').remove();
 renderer.setAnimationLoop(frame);
-window.__sim={_cam:camera,_svg:()=>schemaSVG(cell),info:()=>({calls:renderer.info.render.calls,tri:renderer.info.render.triangles,geo:renderer.info.memory.geometries,tex:renderer.info.memory.textures,prog:renderer.info.programs.length}),cell,UI,VAL,stage,doDoor,doCut,doIso,doDoc,doPlay,doSize,homeStage,nextPhase,PANELS,orb,press,resolve,C:()=>C,get trOff(){return trOff;}};
+window.__sim={noFocus:()=>{orbGoal=null;orbHome=null;},_cam:camera,_svg:()=>schemaSVG(cell),info:()=>({calls:renderer.info.render.calls,tri:renderer.info.render.triangles,geo:renderer.info.memory.geometries,tex:renderer.info.memory.textures,prog:renderer.info.programs.length}),cell,UI,VAL,stage,doDoor,doCut,doIso,doDoc,doPlay,doSize,homeStage,nextPhase,PANELS,orb,press,resolve,C:()=>C,get trOff(){return trOff;}};
 
 }
 
