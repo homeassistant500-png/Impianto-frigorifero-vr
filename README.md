@@ -55,7 +55,7 @@ Il pulsante **RIMETTI SUL TAVOLO** del pannello riporta l'impianto sul banco, ne
 2. Apri **Meta Quest Browser** e digita l'indirizzo **esattamente con la I maiuscola**: `https://homeassistant500-png.github.io/Impianto-frigorifero-vr/`. Salvalo nei preferiti.
 3. Guarda dritto davanti a te e **tieni premuto il pulsante Meta** (il tasto con il logo, sul controller destro) per ricentrare la vista.
 4. Premi il pulsante rosso **ENTRA NEL VISORE** e consenti l'accesso alla realtà virtuale.
-5. Se banco e impianto ti sembrano troppo grandi o troppo in alto, premi **ADATTA ALTEZZA** nel pannello dei comandi a sinistra: lo sguardo viene portato all'altezza di una persona in piedi (1,62 m). La pagina lo fa da sola quando il visore non fornisce il pavimento. Se il banco è di lato o lontano, tieni premuto di nuovo il pulsante Meta per ricentrare.
+5. Se banco e impianto ti sembrano troppo grandi o troppo in alto, premi **ADATTA ALTEZZA** nel pannello dei comandi a sinistra: lo sguardo viene portato all'altezza di una persona in piedi (1,62 m). La pagina lo fa da sola quando il visore non fornisce il pavimento. Per la regolazione fine usa **BANCO PIÙ ALTO ▲** e **BANCO PIÙ BASSO ▼** (passi di 5 cm): l'altezza scelta resta memorizzata sul visore e viene riapplicata a ogni ingresso. Se il banco è di lato o lontano, tieni premuto di nuovo il pulsante Meta per ricentrare.
 
 Ti trovi in piedi davanti al banco: a sinistra il **pannello dei comandi**, a destra il **pannello dei dati**, sulla parete il poster con i colori del refrigerante. Lo schema elettrico e la dispensa si aprono in un pannello più grande, davanti a destra sopra la cella, sempre in primo piano; si chiude con **✕ CHIUDI**.
 

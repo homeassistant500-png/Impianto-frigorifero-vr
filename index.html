@@ -714,9 +714,11 @@ function drawCmd(p,g){const W=p.w,L=36,IW=W-72;
     T(g,s[4],L,y+40,`600 23px ${FS}`,CI.ink);T(g,vs,L+IW-150,y+41,`700 25px ${FM}`,CI.accent,'right');
     const fr=(v-s[1])/(s[2]-s[1]);g.fillStyle=CI.line;g.fillRect(L,y+52,IW-150-16,5);g.fillStyle=CI.hot;g.fillRect(L,y+52,(IW-166)*fr,5);
     B(p,'m'+k,L+IW-136,y+9,62,48,'−',()=>step(k,-1),{fs:30});B(p,'p'+k,L+IW-66,y+9,62,48,'+',()=>step(k,1),{fs:30});y+=66;});
-  y+=20;cap(g,'Banco · dimensione del modello e altezza',L,y);y+=14;
-  const zw=104;SIZES.forEach((s,i)=>B(p,'z'+i,L+i*(zw+8),y,zw,BH,s[1],()=>doSize(s[0]),{on:UI.size===s[0],fs:19}));
-  const rx=L+3*(zw+8),rw=(L+IW-rx-8)/2;B(p,'hgt',rx,y,rw,BH,'Adatta altezza',()=>adaptHeight(true),{kind:'blue',fs:19});B(p,'home',rx+rw+8,y,rw,BH,'Rimetti sul tavolo',homeStage,{kind:'dark',fs:17});y+=BH+26;
+  y+=20;cap(g,'Banco · dimensione del modello',L,y);y+=14;
+  const zw=(IW-16)/6;SIZES.forEach((s,i)=>B(p,'z'+i,L+i*(zw+8),y,zw,BH,s[1],()=>doSize(s[0]),{on:UI.size===s[0],fs:19}));
+  const rx=L+3*(zw+8);B(p,'home',rx,y,L+IW-rx,BH,'Rimetti sul tavolo',homeStage,{kind:'dark',fs:19});y+=BH+26;
+  cap(g,'Altezza del banco rispetto ai tuoi occhi',L,y);T(g,XRM.isPresenting?('occhi a '+f(eyeY(),2).replace('.',',')+' m · banco a '+f(BENCH.y,2)+' m'):'si regola nel visore',L+IW,y,`500 17px ${FM}`,CI.mute,'right');y+=14;
+  B(p,'hdn',L,y,bw3,BH,'Banco più basso ▼',()=>shiftView(0.05),{fs:19});B(p,'hup',L+bw3+8,y,bw3,BH,'Banco più alto ▲',()=>shiftView(-0.05),{fs:19});B(p,'hgt',L+2*(bw3+8),y,bw3,BH,'Adatta altezza',()=>adaptHeight(true),{kind:'blue',fs:19});y+=BH+26;
   cap(g,'Documenti',L,y);y+=14;B(p,'sch',L,y,bw2,BH+4,'Schema elettrico →',()=>doDoc('sch'),{kind:UI.doc==='sch'?'blue':'dark'});B(p,'disp',L+bw2+10,y,bw2,BH+4,'Dispensa →',()=>doDoc('disp'),{kind:UI.doc==='disp'||UI.doc==='quiz'?'blue':'dark'});}
 
 /* ---------- pannello DATI (a destra del banco) ---------- */
@@ -875,7 +877,7 @@ function drawDoc(p,g){g.fillStyle=CI.ink;g.fillRect(0,0,p.w,84);if(LOGO){g.fillS
   if(UI.doc==='sch')drawSch(p,g);else if(UI.doc==='disp')drawDisp(p,g);else if(UI.doc==='quiz')drawQuiz(p,g);}
 function openFull(){const go=()=>{location.href='dispensa-impianti-frigoriferi.html';};const s=XRM.getSession();if(s){s.end().then(go,go);}else window.open('dispensa-impianti-frigoriferi.html','_blank');}
 
-const cmdP=makePanel(1024,1420,0.82,V(-1.80,1.26,-0.45),1.0,drawCmd);
+const cmdP=makePanel(1024,1520,0.82,V(-1.80,1.28,-0.45),1.0,drawCmd);
 const datP=makePanel(1024,1900,0.76,V(1.80,1.44,-0.45),-1.0,drawDat,true,0.8);
 const docP=makePanel(1600,1000,1.85,V(0.95,1.72,-1.45),-0.58,drawDoc,false);docP.mesh.visible=docP.frame.visible=false;
 [[docP.mesh,31],[docP.frame,30]].forEach(([o,r])=>{o.material.depthTest=false;o.material.transparent=true;o.renderOrder=r;});   // finestra sempre in primo piano
@@ -1015,14 +1017,17 @@ addEventListener('resize',()=>{if(XRM.isPresenting)return;renderer.setSize(inner
 /* altezza degli occhi: se il visore non fornisce il pavimento (modalità seduto o stazionaria) la vista finirebbe troppo in basso */
 let baseRef=null,hOff=0,calib=0;const EYE=1.62;
 function eyeY(){const v=new THREE.Vector3();XRM.getCamera().getWorldPosition(v);return v.y;}
-function adaptHeight(manual){if(!baseRef||!XRM.isPresenting)return;const y=eyeY();if(!manual&&y>0.9&&y<2.3)return;
-  hOff+=EYE-y;XRM.setReferenceSpace(baseRef.getOffsetReferenceSpace(new XRRigidTransform({x:0,y:-hOff,z:0})));if(manual)pulse(0.4,40);}
+function applyOff(){XRM.setReferenceSpace(baseRef.getOffsetReferenceSpace(new XRRigidTransform({x:0,y:-hOff,z:0})));try{localStorage.setItem('frigoVR.hOff',String(hOff));}catch(e){}cmdP.dirty=true;}
+function adaptHeight(manual){if(!baseRef||!XRM.isPresenting)return;const y=eyeY();if(!manual&&y>0.9&&y<2.3)return;hOff+=EYE-y;applyOff();if(manual)pulse(0.4,40);}
+/* dy > 0 alza lo sguardo (il banco sembra più basso), dy < 0 lo abbassa (il banco sembra più alto) */
+function shiftView(dy){if(!baseRef||!XRM.isPresenting)return;hOff=clamp(hOff+dy,-1.5,1.5);applyOff();pulse(0.3,25);}
+function savedOff(){try{const v=parseFloat(localStorage.getItem('frigoVR.hOff'));return isFinite(v)?v:null;}catch(e){return null;}}
 const bVR=$('vr'),msg=$('vrmsg');let SES=null;
 const vrUI=(ok,t)=>{bVR.style.display=ok?'':'none';msg.textContent=ok?'Metti il visore e premi il pulsante.':t;};
 if(navigator.xr)navigator.xr.isSessionSupported('immersive-vr').then(ok=>vrUI(ok,'Nessun visore VR rilevato: apri la pagina nel Meta Quest Browser.')).catch(()=>vrUI(false,'WebXR non disponibile in questo browser.'));
 else vrUI(false,isSecureContext?'Questo browser non supporta WebXR: apri la pagina nel Meta Quest Browser.':'Per il visore la pagina va aperta da un indirizzo https (o localhost).');
 bVR.addEventListener('click',async()=>{audioInit();if(SES)return SES.end();
-  try{SES=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});XRM.setFoveation?.(1);XRM.setReferenceSpace(null);await XRM.setSession(SES);baseRef=XRM.getReferenceSpace();hOff=0;calib=45;bVR.textContent='ESCI DAL VISORE';
+  try{SES=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});XRM.setFoveation?.(1);XRM.setReferenceSpace(null);await XRM.setSession(SES);baseRef=XRM.getReferenceSpace();const so=savedOff();if(so!==null&&so!==0){hOff=so;applyOff();calib=0;}else{hOff=0;calib=45;}bVR.textContent='ESCI DAL VISORE';
     SES.addEventListener('end',()=>{SES=null;XRM.setReferenceSpace(null);baseRef=null;hOff=0;bVR.textContent='ENTRA NEL VISORE';renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});}
   catch(err){msg.textContent='Impossibile avviare la sessione VR: '+err.message;}});
 
@@ -1068,7 +1073,7 @@ function frame(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const XR=XR
   const cam=XR?XRM.getCamera():camera;cam.getWorldQuaternion(_q);tracer.parent.getWorldQuaternion(_q2);halo.quaternion.copy(_q2.invert().multiply(_q));
   // pannelli: aggiornati solo quando serve, per non pesare sulla GPU del visore
   thT+=dt;if(thT>0.25){thT=0;drawThermo();}
-  datT+=dt;if(datT>(XR?0.25:0.16)){datT=0;datP.dirty=true;}cmdT+=dt;if(cmdT>0.5){cmdT=0;if(cell.defrost||cell.door)cmdP.dirty=true;}
+  datT+=dt;if(datT>(XR?0.25:0.16)){datT=0;datP.dirty=true;}cmdT+=dt;if(cmdT>0.5){cmdT=0;if(cell.defrost||cell.door||XR)cmdP.dirty=true;}
   docT+=dt;if(docT>(XR?1.0:0.5)){docT=0;if(UI.doc==='sch')docP.dirty=true;}
   labT+=dt;if(labT>0.5){labT=0;labelsDirty=true;}
   PANELS.forEach(p=>{if(p.dirty&&(p!==docP||UI.doc))render(p);});
