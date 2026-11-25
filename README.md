@@ -24,7 +24,8 @@ Simulatore didattico in realtà virtuale di un **impianto frigorifero a R134a** 
 - Aprire l'impianto con lo **spaccato**: vetro, sezione, solido (nel compressore si vedono motore, manovella, biella e pistone).
 - **Isolare** il lato di alta pressione, il lato di bassa pressione, il compressore, gli scambiatori o la valvola.
 - Vedere l'**aria** che attraversa condensatore ed evaporatore e il **calore** scambiato (q꜀ ceduto all'aria, q₀ tolto alla cella).
-- Osservare il **pressostato combinato di massima e minima B2**, montato accanto al compressore: un capillare va alla linea di mandata (P>, alta pressione) e uno alla linea di aspirazione (P<, bassa pressione). Le due spie sul frontale sono verdi a contatto chiuso e lampeggiano rosse quando il pressostato interviene; il **pulsante di riarmo** di P> lampeggia e si preme con il grilletto (su PC con un clic).
+- Osservare il **pressostato combinato di massima e minima B2**, simile a un Danfoss KP15, montato accanto al compressore: scale LP e HP con gli indici di taratura, perni di taratura e pulsante **RESET** sopra, soffietti sotto. Due tubi in rame da 1/4", ortogonali come il resto del circuito, lo collegano alla linea di mandata (P>, alta pressione) e alla linea di aspirazione (P<, bassa pressione). Quando P> interviene il pulsante RESET sporge e lampeggia: si riarma puntandolo con il grilletto (su PC con un clic).
+- **Prendere la frutta**: a porta della cella aperta, avvicina la mano a una mela (rossa o verde) e stringi l'impugnatura per prenderla. Portala alla bocca per darle un morso (si vede il segno con la polpa, si sente il rumore e il controller vibra). Lasciala vicino al suo posto e torna nella cassetta; lasciata altrove cade sul banco o sul pavimento e si può riprendere.
 - Lavorare sulla **cella frigorifera**: aprire la porta con il grilletto sulla maniglia (lampada H1, ventola M3 ferma, allarme H2 dopo 10 s), avviare lo **sbrinamento**, leggere il termostato S1 e i manometri di bassa e alta pressione.
 - Cambiare le **regolazioni** con i pulsanti − e +: temperatura di evaporazione e di condensazione, surriscaldamento, sottoraffreddamento, setpoint del termostato, velocità dell'animazione. Diagramma p–h, punti del ciclo, COP e potenze si aggiornano subito.
 - Mostrare le **etichette** sui componenti (principali o tutte) e i **termini in inglese**.
@@ -36,7 +37,7 @@ Simulatore didattico in realtà virtuale di un **impianto frigorifero a R134a** 
 | Comando | Azione |
 |---|---|
 | **Grilletto** | Preme i pulsanti dei pannelli; sulla striscia del ciclo sposta la particella seguita; sulla maniglia apre e chiude la porta della cella; sul pulsante del pressostato B2 riarma P> |
-| **Impugnatura** (tasto laterale) | Afferra l'impianto per spostarlo e girarlo |
+| **Impugnatura** (tasto laterale) | Afferra l'impianto per spostarlo e girarlo; vicino a una mela, a porta aperta, prende la mela |
 | **Levetta destra** ← → | Ruota l'impianto |
 | **Levetta destra** ↑ ↓ | Ingrandisce o rimpicciolisce l'impianto |
 | **Levetta sinistra** ← → | Sposta la particella seguita avanti o indietro nel circuito |
@@ -86,7 +87,7 @@ https://homeassistant500-png.github.io/Impianto-frigorifero-vr/Impianto-frigorif
 - Viste preimpostate: insieme, compressore, condensatore, valvola, evaporatore, cella.
 - Spaccato, isolamento, flusso, aria e calore, etichette e termini in inglese.
 - Pannelli in tempo reale: trasformazione, punti del ciclo, bilancio e prestazioni, diagramma p–h.
-- Pressostato di massima e minima B2 con spie e pulsante di riarmo cliccabile.
+- Pressostato di massima e minima B2 (simile a un Danfoss KP15) con pulsante di riarmo cliccabile.
 - Schema elettrico funzionale e dispensa interattiva incorporata.
 - **Tour automatico:** se nessuno tocca la pagina il simulatore si presenta da solo.
 - **Tasti:** spazio pausa · 1–6 viste · D porta · H nasconde i pannelli.
