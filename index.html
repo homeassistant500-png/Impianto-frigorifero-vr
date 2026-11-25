@@ -714,9 +714,9 @@ function drawCmd(p,g){const W=p.w,L=36,IW=W-72;
     T(g,s[4],L,y+40,`600 23px ${FS}`,CI.ink);T(g,vs,L+IW-150,y+41,`700 25px ${FM}`,CI.accent,'right');
     const fr=(v-s[1])/(s[2]-s[1]);g.fillStyle=CI.line;g.fillRect(L,y+52,IW-150-16,5);g.fillStyle=CI.hot;g.fillRect(L,y+52,(IW-166)*fr,5);
     B(p,'m'+k,L+IW-136,y+9,62,48,'−',()=>step(k,-1),{fs:30});B(p,'p'+k,L+IW-66,y+9,62,48,'+',()=>step(k,1),{fs:30});y+=66;});
-  y+=20;cap(g,'Banco · dimensione del modello',L,y);y+=14;
-  SIZES.forEach((s,i)=>B(p,'z'+i,L+i*(bw3*0.62+8),y,bw3*0.62,BH,s[1],()=>doSize(s[0]),{on:UI.size===s[0]}));
-  const rx=L+3*(bw3*0.62+8);B(p,'home',rx,y,L+IW-rx,BH,'Rimetti sul tavolo',homeStage,{kind:'dark'});y+=BH+26;
+  y+=20;cap(g,'Banco · dimensione del modello e altezza',L,y);y+=14;
+  const zw=104;SIZES.forEach((s,i)=>B(p,'z'+i,L+i*(zw+8),y,zw,BH,s[1],()=>doSize(s[0]),{on:UI.size===s[0],fs:19}));
+  const rx=L+3*(zw+8),rw=(L+IW-rx-8)/2;B(p,'hgt',rx,y,rw,BH,'Adatta altezza',()=>adaptHeight(true),{kind:'blue',fs:19});B(p,'home',rx+rw+8,y,rw,BH,'Rimetti sul tavolo',homeStage,{kind:'dark',fs:17});y+=BH+26;
   cap(g,'Documenti',L,y);y+=14;B(p,'sch',L,y,bw2,BH+4,'Schema elettrico →',()=>doDoc('sch'),{kind:UI.doc==='sch'?'blue':'dark'});B(p,'disp',L+bw2+10,y,bw2,BH+4,'Dispensa →',()=>doDoc('disp'),{kind:UI.doc==='disp'||UI.doc==='quiz'?'blue':'dark'});}
 
 /* ---------- pannello DATI (a destra del banco) ---------- */
@@ -1012,13 +1012,18 @@ addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();doPlay();}else
 addEventListener('resize',()=>{if(XRM.isPresenting)return;renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});
 
 /* ---------- pulsante ENTRA NEL VISORE ---------- */
+/* altezza degli occhi: se il visore non fornisce il pavimento (modalità seduto o stazionaria) la vista finirebbe troppo in basso */
+let baseRef=null,hOff=0,calib=0;const EYE=1.62;
+function eyeY(){const v=new THREE.Vector3();XRM.getCamera().getWorldPosition(v);return v.y;}
+function adaptHeight(manual){if(!baseRef||!XRM.isPresenting)return;const y=eyeY();if(!manual&&y>0.9&&y<2.3)return;
+  hOff+=EYE-y;XRM.setReferenceSpace(baseRef.getOffsetReferenceSpace(new XRRigidTransform({x:0,y:-hOff,z:0})));if(manual)pulse(0.4,40);}
 const bVR=$('vr'),msg=$('vrmsg');let SES=null;
 const vrUI=(ok,t)=>{bVR.style.display=ok?'':'none';msg.textContent=ok?'Metti il visore e premi il pulsante.':t;};
 if(navigator.xr)navigator.xr.isSessionSupported('immersive-vr').then(ok=>vrUI(ok,'Nessun visore VR rilevato: apri la pagina nel Meta Quest Browser.')).catch(()=>vrUI(false,'WebXR non disponibile in questo browser.'));
 else vrUI(false,isSecureContext?'Questo browser non supporta WebXR: apri la pagina nel Meta Quest Browser.':'Per il visore la pagina va aperta da un indirizzo https (o localhost).');
 bVR.addEventListener('click',async()=>{audioInit();if(SES)return SES.end();
-  try{SES=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});XRM.setFoveation?.(1);await XRM.setSession(SES);bVR.textContent='ESCI DAL VISORE';
-    SES.addEventListener('end',()=>{SES=null;bVR.textContent='ENTRA NEL VISORE';renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});}
+  try{SES=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});XRM.setFoveation?.(1);XRM.setReferenceSpace(null);await XRM.setSession(SES);baseRef=XRM.getReferenceSpace();hOff=0;calib=45;bVR.textContent='ESCI DAL VISORE';
+    SES.addEventListener('end',()=>{SES=null;XRM.setReferenceSpace(null);baseRef=null;hOff=0;bVR.textContent='ENTRA NEL VISORE';renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});}
   catch(err){msg.textContent='Impossibile avviare la sessione VR: '+err.message;}});
 
 /* ---------- ciclo di animazione: θ è l'unico ingresso ---------- */
@@ -1027,7 +1032,7 @@ const M4=new THREE.Matrix4(),Q=new THREE.Quaternion(),S3=new THREE.Vector3(),P3=
 const WS=new THREE.Vector3();let shF=0;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;let last=performance.now(),fC=0,fE=0,aC=0,aE=0,doorA=0,thT=0,datT=0,cmdT=0,docT=0,labT=0,hovDoor=false;
 function frame(now){const dt=Math.min(0.05,(now-last)/1000);last=now;const XR=XRM.isPresenting;
   let hov=new Map(),handHov=false;
-  if(XR){const r=xrInput(dt);hov=r.hov;handHov=r.handHov;}else{CTRL.forEach(o=>{o.line.visible=false;o.dot.visible=false;});if(mHit){if(mHit.kind==='panel'&&mHit.b)hov.set(mHit.p,mHit.b.id);if(mHit.kind==='door')handHov=true;}}
+  if(XR){if(calib>0&&--calib===0)adaptHeight(false);const r=xrInput(dt);hov=r.hov;handHov=r.handHov;}else{CTRL.forEach(o=>{o.line.visible=false;o.dot.visible=false;});if(mHit){if(mHit.kind==='panel'&&mHit.b)hov.set(mHit.p,mHit.b.id);if(mHit.kind==='door')handHov=true;}}
   PANELS.forEach(p=>{const h=hov.get(p)||null;if(h!==p.hover){p.hover=h;p.dirty=true;}});
   if(handHov!==hovDoor){hovDoor=handHov;mHandle.emissiveIntensity=handHov?0.6:0;}
   const sp=UI.run?dt*UI.speed:0;if(UI.run)stepCell(dt);

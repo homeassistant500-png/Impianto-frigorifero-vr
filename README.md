@@ -47,13 +47,15 @@ Simulatore didattico in realtà virtuale di un **impianto frigorifero a R134a** 
 | **X** | Spaccato successivo (vetro → sezione → solido) |
 | **Y** | Isolamento successivo |
 
-Il pulsante **RIMETTI SUL TAVOLO** del pannello riporta l'impianto sul banco, nella posizione iniziale.
+Il pulsante **RIMETTI SUL TAVOLO** del pannello riporta l'impianto sul banco, nella posizione iniziale; **ADATTA ALTEZZA** corregge l'altezza dello sguardo (utile anche da seduti).
 
 ## Come si apre il simulatore per visore
 
-1. Sul visore apri **Meta Quest Browser**.
-2. Digita l'indirizzo del simulatore (conviene salvarlo nei preferiti).
-3. Premi il pulsante rosso **ENTRA NEL VISORE** e consenti l'accesso alla realtà virtuale.
+1. **Prima di indossare il visore**, mettiti in piedi in uno spazio libero. Se il Quest lo chiede, imposta il **confine in modalità «Spazio» (in piedi)** e conferma l'altezza del pavimento. Evita la modalità «Stazionario/seduto»: con quella la pagina non conosce l'altezza del pavimento.
+2. Apri **Meta Quest Browser** e digita l'indirizzo **esattamente con la I maiuscola**: `https://homeassistant500-png.github.io/Impianto-frigorifero-vr/`. Salvalo nei preferiti.
+3. Guarda dritto davanti a te e **tieni premuto il pulsante Meta** (il tasto con il logo, sul controller destro) per ricentrare la vista.
+4. Premi il pulsante rosso **ENTRA NEL VISORE** e consenti l'accesso alla realtà virtuale.
+5. Se banco e impianto ti sembrano troppo grandi o troppo in alto, premi **ADATTA ALTEZZA** nel pannello dei comandi a sinistra: lo sguardo viene portato all'altezza di una persona in piedi (1,62 m). La pagina lo fa da sola quando il visore non fornisce il pavimento. Se il banco è di lato o lontano, tieni premuto di nuovo il pulsante Meta per ricentrare.
 
 Ti trovi in piedi davanti al banco: a sinistra il **pannello dei comandi**, a destra il **pannello dei dati**, sulla parete il poster con i colori del refrigerante. Lo schema elettrico e la dispensa si aprono in un pannello più grande, davanti a destra sopra la cella, sempre in primo piano; si chiude con **✕ CHIUDI**.
 
