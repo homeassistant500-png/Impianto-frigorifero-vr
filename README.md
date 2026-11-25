@@ -47,6 +47,22 @@ Simulatore didattico in realtà virtuale di un **impianto frigorifero a R134a** 
 | **X** | Spaccato successivo (vetro → sezione → solido) |
 | **Y** | Isolamento successivo |
 
+**Due mani sull'impianto:** tenendo premute **entrambe le impugnature** e allargando o stringendo le mani l'impianto si ingrandisce o si rimpicciolisce; ruotando le mani una attorno all'altra si gira.
+
+### Con le mani, senza controller
+
+Il Quest riconosce le mani se il **tracciamento delle mani** è attivo (Impostazioni → Movimento → Mani e controller): basta posare i controller e sollevare le mani davanti al visore.
+
+| Gesto | Azione |
+|---|---|
+| **Pizzico** (pollice + indice) puntando un pulsante | Preme il pulsante; sulla maniglia apre la porta, sul RESET riarma il pressostato |
+| **Pizzico nel vuoto** e movimento della mano | Afferra l'impianto: lo sposti e lo giri muovendo la mano |
+| **Pizzico con due mani** e allargare / stringere | Ingrandisce / rimpicciolisce l'impianto |
+| **Pizzico con due mani** e ruotarle | Gira l'impianto |
+| **Pizzico vicino a una mela** (porta aperta) | Prende la mela; portala alla bocca per il morso, riaprendo le dita la lasci |
+
+Le mani compaiono come puntini sulle articolazioni delle dita.
+
 Il pulsante **RIMETTI SUL TAVOLO** del pannello riporta l'impianto sul banco, nella posizione iniziale; **ADATTA ALTEZZA** corregge l'altezza dello sguardo (utile anche da seduti).
 
 ## Come si apre il simulatore per visore

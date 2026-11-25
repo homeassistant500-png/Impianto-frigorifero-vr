@@ -937,9 +937,10 @@ function ctrlModel(){const g=new THREE.Group(),m=lm('#2b3137',0.45,0.3),m2=lm('#
 const CTRL=[0,1].map(i=>{const c=XRM.getController(i),gr=XRM.getControllerGrip(i);scene.add(c,gr);gr.add(ctrlModel());
   const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,0,0),V(0,0,-1)]),new THREE.LineBasicMaterial({color:CI.lamp,transparent:true,opacity:0.9,depthTest:false}));line.scale.z=3;line.renderOrder=40;c.add(line);
   const dot=new THREE.Mesh(new THREE.SphereGeometry(0.008,12,8),new THREE.MeshBasicMaterial({color:CI.lamp,toneMapped:false,transparent:true,depthTest:false}));dot.renderOrder=41;dot.visible=false;scene.add(dot);
-  const o={i,c,gr,line,dot,src:null,prev:[],hit:null,hand:'',apple:null};
+  const o={i,c,gr,line,dot,src:null,prev:[],hit:null,hand:'',apple:null,pinch:false};
   c.addEventListener('connected',e=>{o.src=e.data;o.hand=e.data.handedness||'';});c.addEventListener('disconnected',()=>{o.src=null;gripEnd(o);});
-  c.addEventListener('selectstart',()=>{audioInit();if(o.hit)press(o.hit,o);});
+  c.addEventListener('selectstart',()=>{audioInit();if(o.hit&&(o.hit.b||o.hit.kind!=='panel')){press(o.hit,o);return;}if(o.src&&o.src.hand&&!o.hit){o.pinch=true;gripStart(o);}});
+  c.addEventListener('selectend',()=>{if(o.pinch){o.pinch=false;gripEnd(o);}});
   c.addEventListener('squeezestart',()=>{audioInit();gripStart(o);});c.addEventListener('squeezeend',()=>gripEnd(o));
   return o;});
 /* ---------- mele nella cella: a porta aperta si prendono con l'impugnatura, si morsicano avvicinandole alla bocca, si rimettono nella cassetta ---------- */
@@ -965,13 +966,13 @@ function appleNear(p,maxD){let best=null,bd=maxD;root.updateMatrixWorld();
   if(cell.door||doorA>0.5)APL_IM.forEach(im=>{for(let i=0;i<im.count;i++){im.getMatrixAt(i,_mA);_v1.setFromMatrixPosition(_mA);if(_mA.elements[0]===0)continue;_v1.applyMatrix4(root.matrixWorld);const d=_v1.distanceTo(p);if(d<bd){bd=d;best={im,i};}}});
   APPLES.forEach(a=>{if(a.held)return;if(a.m.parent===root&&!(cell.door||doorA>0.5))return;a.m.getWorldPosition(_v1);const d=_v1.distanceTo(p);if(d<bd){bd=d;best={a};}});
   return best;}
-function gripStart(o){o.gr.getWorldPosition(_v2);const n=appleNear(_v2,0.08);
+function gripStart(o){o.gr.getWorldPosition(_v2);const n=appleNear(_v2,o.src&&o.src.hand?0.11:0.08);
   if(n){const a=n.a||takeApple(n.im,n.i);a.fall=false;a.held=o;o.gr.attach(a.m);o.apple=a;pulse(0.3,30,o);return;}
-  o.c.attach(stage);pulse(0.4,40,o);}
+  grabStart(o);pulse(0.4,40,o);}
 function gripEnd(o){if(o.apple){const a=o.apple;o.apple=null;a.held=null;a.m.getWorldPosition(_v1);_v2.copy(a.home.pos).applyMatrix4(root.matrixWorld);
     if(_v1.distanceTo(_v2)<0.12*Math.max(1,stage.scale.x)){root.attach(a.m);a.m.position.copy(a.home.pos);a.m.quaternion.copy(a.home.q);a.m.scale.copy(a.home.sc);pulse(0.25,25,o);}
     else{scene.attach(a.m);a.fall=true;a.vy=0;}return;}
-  if(stage.parent===o.c){scene.attach(stage);dirtyAll();}}
+  grabEnd(o);}
 function applesStep(dt){if(!APPLES.length)return;const XR=XRM.isPresenting;
   if(XR){const cam=XRM.getCamera();cam.getWorldPosition(_v2);cam.getWorldDirection(_v1);var mouth=_v2.clone().add(V(0,-0.06,0)).addScaledVector(_v1,0.03);}
   APPLES.forEach(a=>{a.cool=Math.max(0,a.cool-dt);
@@ -980,6 +981,25 @@ function applesStep(dt){if(!APPLES.length)return;const XR=XRM.isPresenting;
     if(a.fall){a.vy-=9.8*dt;a.m.position.y+=a.vy*dt;const r=a.m.scale.y*1.0,onB=Math.abs(a.m.position.x-BENCH.x)<BENCH.w/2&&Math.abs(a.m.position.z-BENCH.z)<BENCH.d/2,gy=(onB&&a.m.position.y>BENCH.y-0.05?BENCH.y:0)+r;
       if(a.m.position.y<=gy){a.m.position.y=gy;a.vy=0;a.fall=false;}}});}
 
+/* ---------- presa dell'impianto: una mano lo sposta e lo gira, due mani lo ingrandiscono e lo ruotano ---------- */
+const GRAB={list:[],two:null};
+function grabStart(o){if(GRAB.list.includes(o))return;GRAB.list.push(o);
+  if(GRAB.list.length===1){o.c.attach(stage);return;}
+  scene.attach(stage);const[a,b]=GRAB.list,pa=a.c.getWorldPosition(new THREE.Vector3()),pb=b.c.getWorldPosition(new THREE.Vector3());
+  GRAB.two={d0:Math.max(0.02,pa.distanceTo(pb)),ang0:Math.atan2(pb.z-pa.z,pb.x-pa.x),mid0:pa.clone().add(pb).multiplyScalar(0.5),s0:stage.scale.x,yaw0:stage.rotation.y,pos0:stage.position.clone()};}
+function grabEnd(o){const i=GRAB.list.indexOf(o);if(i<0)return;GRAB.list.splice(i,1);GRAB.two=null;
+  if(stage.parent!==scene)scene.attach(stage);if(GRAB.list.length===1)GRAB.list[0].c.attach(stage);dirtyAll();}
+function grabStep(){const T2=GRAB.two;if(!T2||GRAB.list.length<2)return;const[a,b]=GRAB.list,pa=a.c.getWorldPosition(new THREE.Vector3()),pb=b.c.getWorldPosition(new THREE.Vector3());
+  const s=clamp(T2.s0*pa.distanceTo(pb)/T2.d0,0.25,3);if(Math.abs(s-stage.scale.x)>1e-4){stage.scale.setScalar(s);labelsDirty=true;}
+  stage.rotation.set(0,T2.yaw0-(Math.atan2(pb.z-pa.z,pb.x-pa.x)-T2.ang0),0);
+  stage.position.copy(T2.pos0).add(pa.add(pb).multiplyScalar(0.5).sub(T2.mid0));}
+
+/* mani: puntini sulle articolazioni quando il visore segue le mani senza controller */
+const HANDS=[0,1].map(i=>{const h=XRM.getHand(i);scene.add(h);return h;});
+const handDots=new THREE.InstancedMesh(new THREE.SphereGeometry(1,8,6),new THREE.MeshStandardMaterial({color:'#e8c4a8',roughness:0.6}),50);handDots.frustumCulled=false;handDots.count=0;scene.add(handDots);
+function drawHands(){let n=0;const M=new THREE.Matrix4(),P=new THREE.Vector3(),Q=new THREE.Quaternion(),S=new THREE.Vector3();
+  HANDS.forEach((h,i)=>{const src=CTRL[i]&&CTRL[i].src;if(!src||!src.hand||!h.joints)return;Object.values(h.joints).forEach(j=>{if(!j.visible||n>=50)return;j.getWorldPosition(P);const r=(j.jointRadius||0.008)*0.9;S.set(r,r,r);M.compose(P,Q,S);handDots.setMatrixAt(n++,M);});});
+  handDots.count=n;handDots.instanceMatrix.needsUpdate=true;}
 function pulse(v=0.5,ms=30,o){const L=o?[o]:CTRL;L.forEach(c=>{try{c.src?.gamepad?.hapticActuators?.[0]?.pulse(v,ms);}catch(e){}});}
 function targets(desk){const t=[cmdP.mesh,datP.mesh,handleHit,resetHit];if(docP.mesh.visible)t.push(docP.mesh);if(desk&&(cell.door||doorA>0.5)){APL_IM.forEach(m=>t.push(m));APPLES.forEach(a=>{if(a.m.parent===root)t.push(a.m);});}return t;}
 function resolve(hit){if(!hit)return null;if(hit.object===handleHit)return{kind:'door'};if(hit.object===resetHit)return{kind:'b2'};if(APL_IM.includes(hit.object))return{kind:'apple',im:hit.object,i:hit.instanceId};if(hit.object.userData.apple)return{kind:'apple',a:hit.object.userData.apple};const p=hit.object.userData.panel;if(!p||!hit.uv)return{kind:'panel',p};
@@ -988,8 +1008,8 @@ function press(h,o){if(h.kind==='door'){doDoor();pulse(0.5,40,o);return;}if(h.ki
 function rayFrom(obj){_m4.identity().extractRotation(obj.matrixWorld);ray.ray.origin.setFromMatrixPosition(obj.matrixWorld);ray.ray.direction.set(0,0,-1).applyMatrix4(_m4);return ray.intersectObjects(targets(),false)[0]||null;}
 const btnOnce=(o,n)=>{const v=!!o.src?.gamepad?.buttons[n]?.pressed,was=o.prev[n];o.prev[n]=v;return v&&!was;};
 const dz=v=>Math.abs(v)<0.2?0:(v-Math.sign(v)*0.2)/0.8;
-function xrInput(dt){const hov=new Map();let handHov=false;
-  for(const o of CTRL){o.hit=null;o.dot.visible=false;o.line.visible=!!o.src;if(!o.src)continue;
+function xrInput(dt){const hov=new Map();let handHov=false;grabStep();drawHands();
+  for(const o of CTRL){o.hit=null;o.dot.visible=false;o.line.visible=!!o.src;if(o.gr.children[0])o.gr.children[0].visible=!!(o.src&&!o.src.hand);if(!o.src)continue;
     const hit=rayFrom(o.c);if(hit){o.hit=resolve(hit);o.line.scale.z=hit.distance;o.dot.position.copy(hit.point);o.dot.visible=true;if(o.hit?.kind==='panel'&&o.hit.b)hov.set(o.hit.p,o.hit.b.id);if(o.hit?.kind==='door')handHov=true;}else o.line.scale.z=3;
     const gp=o.src.gamepad;if(!gp)continue;const ax=dz(gp.axes[2]||0),ay=dz(gp.axes[3]||0),right=o.hand!=='left';
     if(right){if(ax){stage.rotateY(-ax*dt*1.6);}if(ay){const s=clamp(stage.scale.x*Math.exp(-ay*dt*0.9),0.25,3);stage.scale.setScalar(s);labelsDirty=true;}
@@ -1027,7 +1047,7 @@ const vrUI=(ok,t)=>{bVR.style.display=ok?'':'none';msg.textContent=ok?'Metti il 
 if(navigator.xr)navigator.xr.isSessionSupported('immersive-vr').then(ok=>vrUI(ok,'Nessun visore VR rilevato: apri la pagina nel Meta Quest Browser.')).catch(()=>vrUI(false,'WebXR non disponibile in questo browser.'));
 else vrUI(false,isSecureContext?'Questo browser non supporta WebXR: apri la pagina nel Meta Quest Browser.':'Per il visore la pagina va aperta da un indirizzo https (o localhost).');
 bVR.addEventListener('click',async()=>{audioInit();if(SES)return SES.end();
-  try{SES=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor']});XRM.setFoveation?.(1);XRM.setReferenceSpace(null);await XRM.setSession(SES);baseRef=XRM.getReferenceSpace();const so=savedOff();if(so!==null&&so!==0){hOff=so;applyOff();calib=0;}else{hOff=0;calib=45;}bVR.textContent='ESCI DAL VISORE';
+  try{SES=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['local-floor','bounded-floor','hand-tracking']});XRM.setFoveation?.(1);XRM.setReferenceSpace(null);await XRM.setSession(SES);baseRef=XRM.getReferenceSpace();const so=savedOff();if(so!==null&&so!==0){hOff=so;applyOff();calib=0;}else{hOff=0;calib=45;}bVR.textContent='ESCI DAL VISORE';
     SES.addEventListener('end',()=>{SES=null;XRM.setReferenceSpace(null);baseRef=null;hOff=0;bVR.textContent='ENTRA NEL VISORE';renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});}
   catch(err){msg.textContent='Impossibile avviare la sessione VR: '+err.message;}});
 
@@ -1086,7 +1106,7 @@ PANELS.forEach(p=>{if(p!==docP)render(p);});
 if(renderer.compileAsync)await renderer.compileAsync(scene,camera);
 $('load').remove();
 renderer.setAnimationLoop(frame);
-window.__sim={APPLES,APL_IM,takeApple,bite,gripStart,gripEnd,noFocus:()=>{orbGoal=null;orbHome=null;},_cam:camera,_svg:()=>schemaSVG(cell),info:()=>({calls:renderer.info.render.calls,tri:renderer.info.render.triangles,geo:renderer.info.memory.geometries,tex:renderer.info.memory.textures,prog:renderer.info.programs.length}),cell,UI,VAL,stage,doDoor,doCut,doIso,doDoc,doPlay,doSize,homeStage,nextPhase,PANELS,orb,press,resolve,C:()=>C,get trOff(){return trOff;}};
+window.__sim={grabStep,GRAB,APPLES,APL_IM,takeApple,bite,gripStart,gripEnd,noFocus:()=>{orbGoal=null;orbHome=null;},_cam:camera,_svg:()=>schemaSVG(cell),info:()=>({calls:renderer.info.render.calls,tri:renderer.info.render.triangles,geo:renderer.info.memory.geometries,tex:renderer.info.memory.textures,prog:renderer.info.programs.length}),cell,UI,VAL,stage,doDoor,doCut,doIso,doDoc,doPlay,doSize,homeStage,nextPhase,PANELS,orb,press,resolve,C:()=>C,get trOff(){return trOff;}};
 
 }
 
